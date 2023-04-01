@@ -190,7 +190,22 @@ func (d *DedicatedLoadBalancer) EnsureLoadBalancer(ctx context.Context, clusterN
 		}
 	}
 
+	portID := loadbalancer.VipPortId
+	if portID == "" {
+		return nil, false, status.Errorf(codes.Unavailable, "The ELB %s VipPortId is empty, "+
+			"and the instance is unavailable", d.GetLoadBalancerName(ctx, clusterName, service))
+	}
+
 	ingressIP := loadbalancer.VipAddress
+
+	ips, err := d.eipClient.List(&eipmodel.ListPublicipsRequest{PortId: &[]string{portID}})
+	if err != nil {
+		return nil, false, status.Errorf(codes.Unavailable, "error querying EIP list base on PortId (%s): %s",
+			portID, err)
+	}
+	if len(ips) > 0 {
+		ingressIP = *ips[0].PublicIpAddress
+	}
 
 	return &v1.LoadBalancerStatus{
 		Ingress: []v1.LoadBalancerIngress{{IP: ingressIP}},
