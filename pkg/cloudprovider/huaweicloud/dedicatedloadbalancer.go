@@ -26,7 +26,7 @@ import (
 	elbmodel "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/elb/v3/model"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/pointer"
@@ -192,7 +192,7 @@ func (d *DedicatedLoadBalancer) EnsureLoadBalancer(ctx context.Context, clusterN
 
 	portID := loadbalancer.VipPortId
 	if portID == "" {
-		return nil, false, status.Errorf(codes.Unavailable, "The ELB %s VipPortId is empty, "+
+		return nil, status.Errorf(codes.Unavailable, "The ELB %s VipPortId is empty, "+
 			"and the instance is unavailable", d.GetLoadBalancerName(ctx, clusterName, service))
 	}
 
@@ -200,7 +200,7 @@ func (d *DedicatedLoadBalancer) EnsureLoadBalancer(ctx context.Context, clusterN
 
 	ips, err := d.eipClient.List(&eipmodel.ListPublicipsRequest{PortId: &[]string{portID}})
 	if err != nil {
-		return nil, false, status.Errorf(codes.Unavailable, "error querying EIP list base on PortId (%s): %s",
+		return nil, status.Errorf(codes.Unavailable, "error querying EIP list base on PortId (%s): %s",
 			portID, err)
 	}
 	if len(ips) > 0 {
